@@ -1,12 +1,21 @@
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useState,
+} from 'react'
 
-import { useCallback, useEffect, useMemo, useReducer, useState } from 'react'
 import useFetchPhotos from './hooks/useFetchPhotos'
 import PhotoCard from './components/PhotoCard'
+import WelcomeBanner from './components/WelcomeBanner'
 import { favoritesReducer } from './reducers/favoritesReducer'
 
 export default function App() {
   const { photos, loading, error } = useFetchPhotos()
+
   const [search, setSearch] = useState('')
+  const [showWelcome, setShowWelcome] = useState(true)
 
   const [favorites, dispatch] = useReducer(
     favoritesReducer,
@@ -22,10 +31,14 @@ export default function App() {
   )
 
   useEffect(() => {
-    localStorage.setItem(
-      'celebrare-favorites',
-      JSON.stringify(favorites)
-    )
+    try {
+      localStorage.setItem(
+        'celebrare-favorites',
+        JSON.stringify(favorites)
+      )
+    } catch (error) {
+      console.error('Unable to save favorites:', error)
+    }
   }, [favorites])
 
   const handleSearch = useCallback((event) => {
@@ -45,6 +58,16 @@ export default function App() {
     })
   }, [])
 
+  // Show the welcome banner before the gallery.
+  if (showWelcome) {
+    return (
+      <WelcomeBanner
+        onEnter={() => setShowWelcome(false)}
+      />
+    )
+  }
+
+  // Your existing photo gallery starts here.
   return (
     <main className="min-h-screen bg-gray-50">
       <header className="bg-gradient-to-r from-violet-700 to-indigo-700 px-4 py-10 text-white">
@@ -65,6 +88,7 @@ export default function App() {
             <span className="rounded-full bg-white/15 px-4 py-2 text-sm">
               {photos.length} Photos
             </span>
+
             <span className="rounded-full bg-white/15 px-4 py-2 text-sm">
               ♥ {favorites.length} Favorites
             </span>
@@ -98,7 +122,9 @@ export default function App() {
               role="status"
               aria-label="Loading photos"
             />
-            <p className="mt-4 text-gray-600">Loading photos...</p>
+            <p className="mt-4 text-gray-600">
+              Loading photos...
+            </p>
           </div>
         )}
 
@@ -117,6 +143,7 @@ export default function App() {
               <h2 className="text-xl font-bold text-gray-800">
                 Photo Gallery
               </h2>
+
               <p className="text-sm text-gray-500">
                 {filteredPhotos.length} results
               </p>
@@ -138,6 +165,7 @@ export default function App() {
                 <p className="text-lg font-semibold text-gray-700">
                   No photos found
                 </p>
+
                 <p className="mt-2 text-gray-500">
                   Try searching for another author.
                 </p>
